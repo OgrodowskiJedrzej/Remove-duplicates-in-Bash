@@ -3,23 +3,33 @@
 check_same_content() {
     local file1="$1"
     local file2="$2"
-
-    if cmp -s "$file1" "$file2"; then
-        echo "Files $file1 and $file2 have same content."
+    if [ "$file1" != "$file2" ]; then
+        if cmp -s "$file1" "$file2"; then
+            echo "Files $file1 and $file2 have same content."
+        fi
     fi
 }
 
-get_files_to_compare() {
+delete_duplicate_without_asking() {
+    local file="$1"
+    rm -f "$file"
+}
+
+delete_duplicate_with_asking() {
+    local file="$1"
+    rm -i "$file"
+}
+
+
+compare_files() {
     directory="$1"
-    files=("$directory"/*)
 
-    for ((i = 0; i < ${#files[@]}; i++)); do
-        for ((j = i + 1; j < ${#files[@]}; j++)); do
-            file1="${files[$i]}"
-            file2="${files[$j]}"
-
-            check_same_content $file1 $file2
-        done
+    # Use find to get a list of all files (excluding directories) recursively
+    find "$directory" -type f -print0 | while IFS= read -r -d '' file1; do
+        while IFS= read -r -d '' file2; do
+            # Compare files if they have different names
+               check_same_content $file1 $file2
+        done < <(find "$directory" -type f -print0)
     done
 }
 
@@ -39,4 +49,4 @@ print_file_info() {
     fi
 }
 
-get_files_to_compare "/Users/jendras/Prywatne/Books/"
+compare_files "/Users/jendras/Prywatne/Books/"
