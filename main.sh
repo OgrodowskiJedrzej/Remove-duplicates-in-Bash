@@ -1,5 +1,29 @@
 #!/bin/bash
 
+check_same_content() {
+    local file1="$1"
+    local file2="$2"
+
+    if cmp -s "$file1" "$file2"; then
+        echo "Files $file1 and $file2 have same content."
+    fi
+}
+
+get_files_to_compare() {
+    directory="$1"
+    files=("$directory"/*)
+
+    for ((i = 0; i < ${#files[@]}; i++)); do
+        for ((j = i + 1; j < ${#files[@]}; j++)); do
+            file1="${files[$i]}"
+            file2="${files[$j]}"
+
+            check_same_content $file1 $file2
+        done
+    done
+}
+
+
 print_file_info() {
     local file="$1"
     
@@ -15,4 +39,4 @@ print_file_info() {
     fi
 }
 
-print_file_info "/Users/jendras/Prywatne/Books/test.txt"
+get_files_to_compare "/Users/jendras/Prywatne/Books/"
