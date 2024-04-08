@@ -15,22 +15,20 @@ print_file_info() {
     fi
 }
 
-#
-#check_same_name() {
-#    local file1="$1"
-#    local file2="$1"
-#    local mode="$3"
-#
-#    if [ "$file1" = "$file2" ]; then
-#        echo "Files $file1 and $file2 have same name."
-#        if [ "$mode" = "-f"  ]; then
-#            rm -f "$file1"
-#        fi
-#        if [ "$mode" = "-i" ]; then
-#            rm -f "$file2"
-#        fi
-#    fi 
-#}
+check_same_name() {
+    local file1="$1"
+    local file2="$2"
+    local mode="$3"
+    if [ "$(basename "$file1")" = "$(basename "$file2")" ]; then
+        echo "Files $file1 and $file2 have same name."
+        if [ "$mode" = "-f" ]; then
+            rm -f "$file1"
+        fi
+        if [ "$mode" = "-i" ]; then
+            rm -i "$file1"
+        fi
+    fi 
+}
 
 check_same_content() {
     local file1="$1"
@@ -58,11 +56,13 @@ compare_files() {
     modeForCompare="$3"
     find "$directory" -type f -print0 | while IFS= read -r -d '' file1; do
         while IFS= read -r -d '' file2; do
-            if [ "$modeForCompare" = "-c" ]; then
-                check_same_content $file1 $file2 $modeForDeletion
-            fi
-            if [ "$modeForCompare" = "-n" ]; then
-                check_same_name $file1 $file2 $modeForDeletion
+            if [ "$file1" != "$file2" ]; then
+                if [ "$modeForCompare" = "-c" ]; then
+                    check_same_content $file1 $file2 $modeForDeletion
+                fi
+                if [ "$modeForCompare" = "-n" ]; then
+                    check_same_name $file1 $file2 $modeForDeletion
+                fi
             fi
         done < <(find "$directory" -type f -print0)
     done
