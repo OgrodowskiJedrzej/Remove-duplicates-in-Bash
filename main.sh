@@ -1,5 +1,10 @@
 #!/bin/bash
 
+directories=(
+    "/Users/jendras/Downloads/TEST1/"
+    "/Users/jendras/Downloads/TEST2/"
+)
+
 printFileInfo() {
     local file="$1"
     if [ -e "$file" ]; then
@@ -55,20 +60,26 @@ checkSameContent() {
 }
 
 compareFiles() {
-    directory="$1"
-    modeForDeletion="$2"
-    modeForCompare="$3"
-    find "$directory" -type f -print0 | while IFS= read -r -d '' file1; do
-        while IFS= read -r -d '' file2; do
-            if [ "$file1" != "$file2" ]; then
-                if [ "$modeForCompare" = "-c" ]; then
-                    checkSameContent $file1 $file2 $modeForDeletion
+    local modeForDeletion="$1"
+    local modeForCompare="$2"
+
+    for directory in "${directories[@]}"; do
+        find "$directory" -type f -print0 | while IFS= read -r -d '' file1; do
+            for compare_directory in "${directories[@]}"; do
+                if [ "$directory" != "$compare_directory" ]; then
+                    find "$compare_directory" -type f -print0 | while IFS= read -r -d '' file2; do
+                        if [ "$file1" != "$file2" ]; then
+                            if [ "$modeForCompare" = "-c" ]; then
+                                checkSameContent "$file1" "$file2" "$modeForDeletion"
+                            fi
+                            if [ "$modeForCompare" = "-n" ]; then
+                                checkSameName "$file1" "$file2" "$modeForDeletion"
+                            fi
+                        fi
+                    done
                 fi
-                if [ "$modeForCompare" = "-n" ]; then
-                    checkSameName $file1 $file2 $modeForDeletion
-                fi
-            fi
-        done < <(find "$directory" -type f -print0)
+            done
+        done
     done
 }
 
@@ -90,14 +101,14 @@ defaultDeleteType="-i"
 defaultCompareType="-c" 
 
 if [ -z "$1" ]; then
-    compareFiles "$pathToDirectory" "$defaultDeleteType" "$defaultCompareType"
+    compareFiles "$defaultDeleteType" "$defaultCompareType"
 fi
 if [ "$1" = "-h" ]; then
     printHelpInfo
 fi
 if [ "$1" = "-f" ]; then
-    compareFiles "$pathToDirectory" "$1" "$2"
+    compareFiles "$1" "$2"
 fi
 if [ "$1" = "-i" ]; then
-    compareFiles "$pathToDirectory" "$1" "$2"
+    compareFiles "$1" "$2"
 fi
