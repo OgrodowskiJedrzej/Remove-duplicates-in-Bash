@@ -9,10 +9,9 @@ printFileInfo() {
     local file="$1"
     if [ -e "$file" ]; then
         echo "File name: $file"
-        echo "Owner: $(stat -f '%Su' "$file")"
-        echo "Permissions: $(stat -f '%Lp' "$file")"
-        echo "Last Modified: $(stat -f '%Sm' -t '%Y-%m-%d %H:%M:%S' "$file")"
-        echo "Size: $(stat -f '%z' "$file") bytes"
+        echo "Owner: $(ls -ld "$file" | tr -s " " | cut -d ' ' -f 3)"
+        echo "Permissions: $(ls -ld "$file" | cut -c 2-10)"
+        echo "Last Modified: $(ls -l "$file" | tr -s " " | cut -d ' ' -f 6-8)"
         echo " "
     else
         echo "File not found: $file"
@@ -23,7 +22,7 @@ checkSameName() {
     local file1="$1"
     local file2="$2"
     local mode="$3"
-    if [ "$(basename "$file1")" = "$(basename "$file2")" ]; then
+    if [ "$("$file1")" = "$("$file2")" ]; then
         printFileInfo $file1
         echo " "
         printFileInfo $file2
@@ -33,7 +32,7 @@ checkSameName() {
         fi
         if [ "$mode" = "-i" ]; then
             rm -i "$file1"
-            echp " "
+            echo " "
         fi
     fi 
 }
@@ -94,8 +93,6 @@ printHelpInfo() {
     echo "Parameter2: -c to delete file with same content"
     exit 0
 }
-
-pathToDirectory="/Users/jendras/Prywatne/Books/"
 
 defaultDeleteType="-i"
 defaultCompareType="-c" 
