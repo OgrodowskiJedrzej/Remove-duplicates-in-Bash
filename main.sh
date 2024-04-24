@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# list of directories to search for duplicates in, you can add them manually here by providing path to directory
 directories=(
     "/Users/jendras/Downloads/TEST1/"
     "/Users/jendras/Downloads/TEST2/"
@@ -12,6 +13,18 @@ printFileInfo() {
     echo "Permissions: $(ls -ld "$file" | cut -c 2-10)"
     echo "Last Modified: $(ls -l "$file" | tr -s " " | cut -d ' ' -f 6-8)"
     echo " "
+}
+
+printHelpInfo() {
+    echo "This script can be used to delete duplicates of files by content or by name"
+    echo "Usage: ./main.sh [Parameter1] [Parameter2]"
+    echo "Default: -i -c"
+    echo "Following options are available:"
+    echo "Parameter1: -f to delete file instantly"
+    echo "Parameter1: -i to ask before deleting"
+    echo "Parameter2: -n to delete file with same name"
+    echo "Parameter2: -c to delete file with same content"
+    exit 0
 }
 
 checkSameName() {
@@ -27,16 +40,14 @@ checkSameName() {
             echo " "
         fi
         if [ "$mode" = "-i" ]; then
-            while true; do
                 echo -n "Do you want to delete '$file1'? (y/n): "
-                read -r answer < /dev/tty # had to do this because terminal on mac didnt wait for answer 
-                if [ "$answer" = "y" ]; then
-                    rm -f "$file1"
-                    break
-                elif [ "$answer" = "n" ]; then
-                    exit
-                fi
-            done
+                read -r answer < /dev/tty # necessary because terminal on mac didnt wait for answer 
+            if [ "$answer" = "y" ]; then
+                rm -f "$file1"
+                exit 0
+            elif [ "$answer" = "n" ]; then
+                exit 0
+            fi
         fi
     fi 
 }
@@ -55,16 +66,14 @@ checkSameContent() {
                     echo " "
                fi
                if [ "$mode" = "-i" ]; then
-                    while true; do
                         echo -n "Do you want to delete '$file1'? (y/n): "
                         read -r answer < /dev/tty # had to do this because terminal on mac didnt wait for answer 
                     if [ "$answer" = "y" ]; then
                         rm -f "$file1"
-                        break
+                        exit 0
                     elif [ "$answer" = "n" ]; then
-                        exit
+                        exit 0
                     fi
-                done
                fi
         fi
     fi
@@ -94,42 +103,35 @@ compareFiles() {
     done
 }
 
-printHelpInfo() {
-    echo "This script can be used to delete duplicates of files by content or by name"
-    echo "Usage: ./main.sh [Parameter1] [Parameter2]"
-    echo "Default: Parameter1 -i Parameter2 -c"
-    echo "The following options are available:"
-    echo "Parameter1: -f to delete file instantly"
-    echo "Parameter1: -i to ask before deleting"
-    echo "Parameter2: -n to delete file with same name"
-    echo "Parameter2: -c to delete file with same content"
-    exit 0
-}
+# predefined default parameters
+deleteType="-i"
+compareType="-c"
 
-defaultDeleteType="-i"
-defaultCompareType="-c"
-
-if [ -n "$1" ]; then
-    deleteType="$1"
-else
-    deleteType="$defaultDeleteType"
-fi
-if [ -n "$2" ]; then
-    compareType="$2"
-else
-    compareType="$defaultCompareType"
-fi
-
-if [ "$1" = "-h" ]; then
+# handling parameters in any order where "$#" is number of parameters and "-gt" is comparing to given value after (>)
+if [ "$#" -gt 2 ]; then
+    echo "Too many parameters provided."
+    echo " "
     printHelpInfo
-elif [ "$1" = "-f" ] || [ "$1" = "-i" ]; then
-    if [ -n "$2" ]; then
-        compareFiles "$deleteType" "$compareType"
-    else
-        echo "Missing second argument."
-        echo " "
-        printHelpInfo
-    fi
-else
-    compareFiles "$deleteType" "$compareType"
 fi
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -f|-i)
+            deleteType="$1"
+            shift
+            ;;
+        -n|-c)
+            compareType="$1"
+            shift
+            ;;
+        -h)
+            printHelpInfo
+            ;;
+        *)
+            echo "Invalid parameter: $1"
+            exit 1
+            ;;
+    esac
+done
+
+compareFiles "$deleteType" "$compareType"
