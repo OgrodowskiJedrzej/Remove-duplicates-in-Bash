@@ -7,22 +7,18 @@ directories=(
 
 printFileInfo() {
     local file="$1"
-    if [ -e "$file" ]; then
-        echo "File name: $file"
-        echo "Owner: $(ls -ld "$file" | tr -s " " | cut -d ' ' -f 3)"
-        echo "Permissions: $(ls -ld "$file" | cut -c 2-10)"
-        echo "Last Modified: $(ls -l "$file" | tr -s " " | cut -d ' ' -f 6-8)"
-        echo " "
-    else
-        echo "File not found: $file"
-    fi
+    echo "File name: $file"
+    echo "Owner: $(ls -ld "$file" | tr -s " " | cut -d ' ' -f 3)"
+    echo "Permissions: $(ls -ld "$file" | cut -c 2-10)"
+    echo "Last Modified: $(ls -l "$file" | tr -s " " | cut -d ' ' -f 6-8)"
+    echo " "
 }
 
 checkSameName() {
     local file1="$1"
     local file2="$2"
     local mode="$3"
-    if [ "$("$file1")" = "$("$file2")" ]; then
+    if [ "$(basename "$file1")" = "$(basename "$file2")" ]; then
         printFileInfo $file1
         echo " "
         printFileInfo $file2
@@ -31,8 +27,16 @@ checkSameName() {
             echo " "
         fi
         if [ "$mode" = "-i" ]; then
-            rm -i "$file1"
-            echo " "
+            while true; do
+                echo -n "Do you want to delete '$file1'? (y/n): "
+                read -r answer < /dev/tty # had to do this because terminal on mac didnt wait for answer 
+                if [ "$answer" = "y" ]; then
+                    rm -f "$file1"
+                    break
+                elif [ "$answer" = "n" ]; then
+                    exit
+                fi
+            done
         fi
     fi 
 }
@@ -51,8 +55,16 @@ checkSameContent() {
                     echo " "
                fi
                if [ "$mode" = "-i" ]; then
-                    rm -i "$file1"
-                    echo " "
+                    while true; do
+                        echo -n "Do you want to delete '$file1'? (y/n): "
+                        read -r answer < /dev/tty # had to do this because terminal on mac didnt wait for answer 
+                    if [ "$answer" = "y" ]; then
+                        rm -f "$file1"
+                        break
+                    elif [ "$answer" = "n" ]; then
+                        exit
+                    fi
+                done
                fi
         fi
     fi
@@ -95,17 +107,29 @@ printHelpInfo() {
 }
 
 defaultDeleteType="-i"
-defaultCompareType="-c" 
+defaultCompareType="-c"
 
-if [ -z "$1" ]; then
-    compareFiles "$defaultDeleteType" "$defaultCompareType"
+if [ -n "$1" ]; then
+    deleteType="$1"
+else
+    deleteType="$defaultDeleteType"
 fi
+if [ -n "$2" ]; then
+    compareType="$2"
+else
+    compareType="$defaultCompareType"
+fi
+
 if [ "$1" = "-h" ]; then
     printHelpInfo
-fi
-if [ "$1" = "-f" ]; then
-    compareFiles "$1" "$2"
-fi
-if [ "$1" = "-i" ]; then
-    compareFiles "$1" "$2"
+elif [ "$1" = "-f" ] || [ "$1" = "-i" ]; then
+    if [ -n "$2" ]; then
+        compareFiles "$deleteType" "$compareType"
+    else
+        echo "Missing second argument."
+        echo " "
+        printHelpInfo
+    fi
+else
+    compareFiles "$deleteType" "$compareType"
 fi
