@@ -2,8 +2,8 @@
 
 # list of directories to search for duplicates in, you can add them manually here by providing path to directory
 directories=(
-    "/Users/jendras/Downloads/TEST1/"
-    "/Users/jendras/Downloads/TEST2/"
+    "TESTDIRECTORY1/"
+    "TESTDIRECTORY2/"
 )
 
 printFileInfo() {
@@ -17,13 +17,13 @@ printFileInfo() {
 
 printHelpInfo() {
     echo "This script can be used to delete duplicates of files by content or by name"
-    echo "Usage: ./main.sh [Parameter1] [Parameter2]"
+    echo "Usage: ./main.sh [-f|i|n|c]"
     echo "Default: -i -c"
-    echo "Following options are available:"
-    echo "Parameter1: -f to delete file instantly"
-    echo "Parameter1: -i to ask before deleting"
-    echo "Parameter2: -n to delete file with same name"
-    echo "Parameter2: -c to delete file with same content"
+    echo "The following options are available:"
+    echo "f	Delete file instantly."
+    echo "i	Ask before deleting."
+    echo "n	Delete file with same name."
+    echo "c	Delete file with same content."
     exit 0
 }
 
