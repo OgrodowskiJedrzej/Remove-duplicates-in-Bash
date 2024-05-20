@@ -2,15 +2,15 @@
 
 # list of directories to search for duplicates in, you can add them manually here by providing path to directory
 directories=(
-    "TESTDIRECTORY1/"
-    "TESTDIRECTORY2/"
+    "ad"
+    "adada"
 )
 
 printFileInfo() {
     local file="$1"
     echo "File name: $file"
-    echo "Owner: $(ls -ld "$file" | tr -s " " | cut -d ' ' -f 3)"
-    echo "Permissions: $(ls -ld "$file" | cut -c 2-10)"
+    echo "Owner: $(ls -l "$file" | tr -s " " | cut -d ' ' -f 3)"
+    echo "Permissions: $(ls -l "$file" | cut -c 2-10)"
     echo "Last Modified: $(ls -l "$file" | tr -s " " | cut -d ' ' -f 6-8)"
     echo " "
 }
@@ -83,21 +83,19 @@ compareFiles() {
     local modeForDeletion="$1"
     local modeForCompare="$2"
 
-    for directory in "${directories[@]}"; do
-        find "$directory" -type f -print0 | while IFS= read -r -d '' file1; do
-            for compare_directory in "${directories[@]}"; do
-                if [ "$directory" != "$compare_directory" ]; then
-                    find "$compare_directory" -type f -print0 | while IFS= read -r -d '' file2; do
-                        if [ "$file1" != "$file2" ]; then
-                            if [ "$modeForCompare" = "-c" ]; then
-                                checkSameContent "$file1" "$file2" "$modeForDeletion"
-                            fi
-                            if [ "$modeForCompare" = "-n" ]; then
-                                checkSameName "$file1" "$file2" "$modeForDeletion"
-                            fi
+    for ((i=0; i < ${#directories[@]}; i++)); do
+        for ((j=$i+1; j < ${#directories[@]}; j++)); do
+            find "${directories[$i]}" "${directories[$j]}" -type f -print0 | while IFS= read -r -d '' file1; do
+                find "${directories[$j]}" "${directories[$i]}" -type f -print0 | while IFS= read -r -d '' file2; do
+                    if [ "$file1" != "$file2" ]; then
+                        if [ "$modeForCompare" = "-c" ]; then
+                            checkSameContent "$file1" "$file2" "$modeForDeletion"
                         fi
-                    done
-                fi
+                        if [ "$modeForCompare" = "-n" ]; then
+                            checkSameName "$file1" "$file2" "$modeForDeletion"
+                        fi
+                    fi
+                done
             done
         done
     done
