@@ -2,15 +2,15 @@
 
 # list of directories to search for duplicates in, you can add them manually here by providing path to directory
 directories=(
-    "ad"
-    "adada"
+    "firstDirectory"
+    "secondDirectory"
 )
 
 printFileInfo() {
     local file="$1"
     echo "File name: $file"
     echo "Owner: $(ls -l "$file" | tr -s " " | cut -d ' ' -f 3)"
-    echo "Permissions: $(ls -l "$file" | cut -c 2-10)"
+    echo "Permissions: $(ls -l "$file" | tr -s " " | cut -d ' ' -f 1)"
     echo "Last Modified: $(ls -l "$file" | tr -s " " | cut -d ' ' -f 6-8)"
     echo " "
 }
@@ -32,18 +32,18 @@ checkSameName() {
     local file2="$2"
     local mode="$3"
     if [ "$(basename "$file1")" = "$(basename "$file2")" ]; then
-        printFileInfo $file1
+        printFileInfo "$file1"
         echo " "
-        printFileInfo $file2
+        printFileInfo "$file2"
         if [ "$mode" = "-f" ]; then
-            rm -f "$file1"
+            rm "$file1"
             echo " "
         fi
         if [ "$mode" = "-i" ]; then
                 echo -n "Do you want to delete '$file1'? (y/n): "
                 read -r answer < /dev/tty # necessary because terminal on mac didnt wait for answer 
             if [ "$answer" = "y" ]; then
-                rm -f "$file1"
+                rm "$file1"
                 exit 0
             elif [ "$answer" = "n" ]; then
                 exit 0
@@ -58,18 +58,18 @@ checkSameContent() {
     local mode="$3"
     if [ "$file1" != "$file2" ]; then
         if cmp -s "$file1" "$file2"; then
-            printFileInfo $file1
+            printFileInfo "$file1"
             echo " "
-            printFileInfo $file2
+            printFileInfo "$file2"
                if [ "$mode" = "-f" ]; then
-                    rm -f "$file1"
+                    rm "$file1"
                     echo " "
                fi
                if [ "$mode" = "-i" ]; then
                         echo -n "Do you want to delete '$file1'? (y/n): "
                         read -r answer < /dev/tty # had to do this because terminal on mac didnt wait for answer 
                     if [ "$answer" = "y" ]; then
-                        rm -f "$file1"
+                        rm "$file1"
                         exit 0
                     elif [ "$answer" = "n" ]; then
                         exit 0
@@ -133,3 +133,10 @@ while [[ $# -gt 0 ]]; do
 done
 
 compareFiles "$deleteType" "$compareType"
+
+# Handling spaces:
+# https://unix.stackexchange.com/questions/9496/looping-through-files-with-spaces-in-the-names
+# Swith case:
+# https://linuxize.com/post/bash-case-statement/
+# Terminal didn't wait for input from user:
+# https://superuser.com/questions/1032042/how-to-use-the-command-read-on-a-shell-script-which-reads-its-arguments-from-s
