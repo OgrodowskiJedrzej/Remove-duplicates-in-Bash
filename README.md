@@ -9,8 +9,6 @@ This script helps in identifying and removing duplicate files based on their nam
 - Handles multiple directories.
 - Outputs file information before deletion.
 
-## Requirements
-
 ## Usage
 
 ### Running the Script
