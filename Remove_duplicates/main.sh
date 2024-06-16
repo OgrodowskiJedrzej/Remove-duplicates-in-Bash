@@ -2,8 +2,8 @@
 
 # Defined directories to look for duplicates
 directories=(
-    "firstDirectory"
-    "secondDirectory"
+    "test"
+    "test2"
 )
 
 printFileInfo() {
@@ -47,15 +47,6 @@ promptDeleteFile() {
 }
 
 # Functions to manage files with same name
-checkSameName() {
-    local file1="$1"
-    local file2="$2"
-    local mode="$3"
-    if [ "$(basename "$file1")" = "$(basename "$file2")" ]; then
-        handleDuplicateName "$file1" "$file2" "$mode"
-    fi
-}
-
 handleDuplicateName() {
     local file1="$1"
     local file2="$2"
@@ -70,19 +61,16 @@ handleDuplicateName() {
     fi
 }
 
-# Functions to menage files with same content
-checkSameContent() {
+checkSameName() {
     local file1="$1"
     local file2="$2"
     local mode="$3"
-    # Used cmp to compare byte by byte so it works with img and music files
-    if [ "$file1" != "$file2" ]; then
-        if cmp -s "$file1" "$file2"; then
-            handleDuplicateContent "$file1" "$file2" "$mode"
-        fi
+    if [ "$(basename "$file1")" = "$(basename "$file2")" ]; then
+        handleDuplicateName "$file1" "$file2" "$mode"
     fi
 }
 
+# Functions to menage files with same content
 handleDuplicateContent() {
     local file1="$1"
     local file2="$2"
@@ -97,34 +85,19 @@ handleDuplicateContent() {
     fi
 }
 
-# Functions to process directories
-processDirectories() {
-    local dir1="$1"
-    local dir2="$2"
-    local modeForCompare="$3"
-    local modeForDeletion="$4"
-
-    # Used IFS= to handle wildcards
-    find "$dir1" "$dir2" -type f -print0 | while IFS= read -r -d '' file1; do
-        findFilesInOtherDir "$file1" "$dir1" "$dir2" "$modeForCompare" "$modeForDeletion"
-    done
-}
-
-findFilesInOtherDir() {
+checkSameContent() {
     local file1="$1"
-    local dir1="$2"
-    local dir2="$3"
-    local modeForCompare="$4"
-    local modeForDeletion="$5"
-
-    # Used IFS= to handle wildcards
-    find "$dir2" "$dir1" -type f -print0 | while IFS= read -r -d '' file2; do
-        if [ "$file1" != "$file2" ]; then
-            performComparsion "$file1" "$file2" "$modeForCompare" "$modeForDeletion"
+    local file2="$2"
+    local mode="$3"
+    # Used cmp to compare byte by byte so it works with img and music files
+    if [ "$file1" != "$file2" ]; then
+        if cmp -s "$file1" "$file2"; then
+            handleDuplicateContent "$file1" "$file2" "$mode"
         fi
-    done
+    fi
 }
 
+# Functions to process directories
 performGivenComparsionType() {
     local file1="$1"
     local file2="$2"
@@ -138,15 +111,33 @@ performGivenComparsionType() {
     fi
 }
 
+processAndCompareFiles() {
+    local dir1="$1"
+    local dir2="$2"
+    local modeForCompare="$3"
+    local modeForDeletion="$4"
+    find "$dir1" -type f -print0 | while IFS= read -r -d '' file1; do
+        find "$dir2" -type f -print0 | while IFS= read -r -d '' file2; do
+            if [ "$file1" != "$file2" ]; then
+                performGivenComparsionType "$file1" "$file2" "$modeForCompare" "$modeForDeletion"
+            fi
+        done
+    done
+}
+
 compareFiles() {
     local modeForDeletion="$1"
     local modeForCompare="$2"
 
-    for ((i=0; i < ${#directories[@]}; i++)); do
-        for ((j=$i+1; j < ${#directories[@]}; j++)); do
-            processDirectories "${directories[$i]}" "${directories[$j]}" "$modeForCompare" "$modeForDeletion"
+    if [ "${#directories[@]}" -eq 1 ]; then
+        processAndCompareFiles "${directories[0]}" "${directories[0]}" "$modeForCompare" "$modeForDeletion"
+    else
+        for ((i=0; i < ${#directories[@]}; i++)); do
+            for ((j=$i+1; j < ${#directories[@]}; j++)); do
+                processAndCompareFiles "${directories[$i]}" "${directories[$j]}" "$modeForCompare" "$modeForDeletion"
+            done
         done
-    done
+    fi
 }
 
 # Predefined default parameters
